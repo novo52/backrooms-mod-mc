@@ -1,0 +1,15 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "backrooms:block/ceiling_tile"
+      },
+      {
+      "model": "backrooms:block/ceiling_tile_1"
+      },
+      {
+      "model": "backrooms:block/ceiling_tile_2"
+      }
+    ]
+  }
+}
