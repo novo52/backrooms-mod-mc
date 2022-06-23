@@ -17,25 +17,6 @@
     "height": 16
   },
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "biome": "minecraft:the_void",
-      "lakes": false,
-      "features": false,
-      "layers": [
-        {
-          "block": "backrooms:moldy_carpet",
-          "height": 1
-        },
-        {
-          "block": "minecraft:air",
-          "height": 4
-        },
-        {
-          "block": "backrooms:ceiling_tile",
-          "height": 1
-        }
-      ]
-    }
+    "type": "backrooms:level_1"
   }
 }
