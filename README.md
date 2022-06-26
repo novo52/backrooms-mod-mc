@@ -1,16 +1,21 @@
 # Backrooms Mod
 
+![](iconic.png)
+![](layout.png)
+
+
 ## Features so far
 - 🟩 Backrooms blocks
+  - 🟥 Fluorescent light buzz
 - 🟩 Backrooms dimension
 - 🆗 Custom world generation
-- 🟥 Non euclidean world generation (immersive portals)
-- 🟥 Entities
-- 🟥 Multiple levels (as biomes)
+  - 🟩 Room based world generation
+  - 🟥 Non euclidean world generation (immersive portals)
+  - 🟥 Multiple levels (as biomes)
+- 🟥 Entities?
 - 🟥 Entry portal and exit level
-- 🟥 Noclipping to enter
+  - 🟥 Noclipping to enter
 - 🟥 Spawn in the backrooms world generation option
-- 🟥 Fluorescent light buzz
 
 ## Setup
 
