@@ -42,24 +42,8 @@ public class BackroomsMod implements ModInitializer {
 		Registry.register(Registry.CHUNK_GENERATOR, new Identifier(modID, "level_1"), BackroomsChunkGenerator.CODEC);
 		ModDimensions.register();
 		
-//		BackroomsMazeGenius bmg = BackroomsMazeGenius.getInstance();
-//		bmg.setWorldSeed(45);
-//		for(int y = 0; y > -100; y--) {
-//			for(int x = -200; x < 200; x++) {
-//				BackroomsMazeGenius.Border room = bmg.getRoomAt(new Vec3i(x, 0, y));
-//				int id = room.hashCode() % 26;
-//				System.out.print((char)(id + 'A'));
-//				System.out.print(' ');
-//			}
-//			System.out.print('\n');
-//		}
-//		for(int y = 0; y > -100; y--) {
-//			for(int x = -200; x < 200; x++) {
-//				boolean filled = bmg.isFilled(new Vec3i(x, 0, y));
-//				System.out.print(filled ? 'X' : '.');
-//				System.out.print(' ');
-//			}
-//			System.out.print('\n');
-//		}
+		BackroomsMazeGenius bmg = BackroomsMazeGenius.getInstance();
+		bmg.setWorldSeed(45);
+		
 	}
 }

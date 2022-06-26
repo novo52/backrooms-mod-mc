@@ -4,16 +4,19 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureSet;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.RegistryOps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -68,6 +71,16 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	}
 	
 	@Override
+	public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
+	
+	}
+	
+	@Override
+	public void setStructureStarts(DynamicRegistryManager registryManager, StructureAccessor world, Chunk chunk, StructureManager structureManager, long worldSeed) {
+	
+	}
+	
+	@Override
 	public void buildSurface(ChunkRegion region, StructureAccessor structureAccessor, Chunk chunk) {
 	}
 	
@@ -97,7 +110,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 		BlockState ceilState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_tile")).getDefaultState();
 		int ceilHeight = 5;
 		
-		BlockState wallState = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		BlockState innerRoomState;
 		BackroomsMazeGenius bmg = BackroomsMazeGenius.getInstance();
 		
 		for(int k = 0; k < 16; ++k) {
@@ -113,10 +126,10 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 				// Walls
 				int x = chunk.getPos().getOffsetX(k);
 				int z = chunk.getPos().getOffsetZ(l);
-				boolean filled = bmg.isFilled(new Vec3i(x, 0, z));
-				if(filled) {
+				innerRoomState = bmg.getBlockStateAt(new Vec3i(x, 0, z));
+				if(!innerRoomState.isAir()) {
 					for(int i = 1; i < 5; i++) {
-						chunk.setBlockState(mutable.set(k, i, l), wallState, false);
+						chunk.setBlockState(mutable.set(k, i, l), innerRoomState, false);
 					}
 				}
 			}

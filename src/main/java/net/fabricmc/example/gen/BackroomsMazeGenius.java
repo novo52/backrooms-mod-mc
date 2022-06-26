@@ -1,6 +1,9 @@
 package net.fabricmc.example.gen;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.registry.Registry;
 
 import java.util.Random;
 
@@ -14,15 +17,11 @@ To find the block at a specific pos, a tree lookup will occur and the tree will 
 public class BackroomsMazeGenius
 {
 	private static BackroomsMazeGenius instance = null;
-	private final int worldBorder = 32767;
-	private HallwayRoom root;
-	private final Random rand;
-	private long worldSeed;
+	private static final Random rand = new Random();
+	private PartitionHallway root;
+	private static long worldSeed;
 	
-	private BackroomsMazeGenius()
-	{
-		this.rand = new Random();
-	}
+	private BackroomsMazeGenius() {}
 	
 	public static BackroomsMazeGenius getInstance()
 	{
@@ -34,97 +33,115 @@ public class BackroomsMazeGenius
 	
 	public void setWorldSeed(long worldSeed)
 	{
-		this.worldSeed = worldSeed;
+		BackroomsMazeGenius.worldSeed = worldSeed;
 	}
 	
-	public boolean isFilled(Vec3i pos) {
-		Border room = getRoomAt(pos);
-		
-		// Rooms that are too small to be walled can be hallways
-		if(room.getWidth() < 5 || room.getHeight() < 5) return false;
-		
-		// Rooms get walls and shit
-		if(room.x1 == pos.getX() || room.y1 == pos.getZ()) return true;
-		
-		return false;
+	public BlockState getBlockStateAt(Vec3i pos) {
+		return getRoomAt(pos).getBlockAt(pos);
 	}
 	
-	public Border getRoomAt(Vec3i pos)
+	// Returns the room object at a position
+	public Room getRoomAt(Vec3i pos)
 	{
 		
 		// create root if needed
 		if(root == null) {
-			root = new HallwayRoom();
-			rand.setSeed(worldSeed); // First hallway uses the world seed as random
-			root.coord = randomNormal(-worldBorder, worldBorder);
-			root.isVertical = rand.nextBoolean();
-			root.totalArea = new Border(-worldBorder, -worldBorder, worldBorder, worldBorder);
+			final int worldBorder = 32767;
+			root = new PartitionHallway(-worldBorder, -worldBorder, worldBorder, worldBorder, rand.nextBoolean());
 		}
 		
 		// start at root and iterate thru the tree, creating partitions if needed
-		HallwayRoom currentNode = root;
+		PartitionHallway current = root;
 		
 		do {
-			if(currentNode.isVertical) {
-				if(pos.getX() < currentNode.coord) {
-					if(currentNode.back == null) {
-						currentNode.back = new HallwayRoom();
-						rand.setSeed(worldSeed + currentNode.coord + 5);
-						currentNode.back.coord = randomNormal(currentNode.totalArea.y1, currentNode.totalArea.y2);
-						currentNode.back.totalArea = new Border(currentNode.totalArea.x1, currentNode.totalArea.y1,
-								currentNode.coord, currentNode.totalArea.y2);
+			
+			int x1 = current.x1;
+			int y1 = current.y1;
+			int x2 = current.x2;
+			int y2 = current.y2;
+			
+			if(current.isVertical) {
+				if(pos.getX() < current.hallway.x1) { // Left
+					if(current.back == null) {
+						x2 = current.hallway.x1;
+						if(isBisectable(x1, y1, x2, y2)) {
+							current.back = new PartitionHallway(x1, y1, x2, y2);
+						}
+						else {
+							current.back = new WalledRoom(x1, y1, x2, y2);
+							return (WalledRoom) current.back;
+						}
 					}
-					currentNode = currentNode.back;
+					
+					if(current.back.getClass() == WalledRoom.class) return (WalledRoom) current.back;
+					current = (PartitionHallway) current.back;
+				}
+				else if(pos.getX() >= current.hallway.x2) { // Right
+					if(current.front == null) {
+						x1 = current.hallway.x2;
+						if(isBisectable(x1, y1, x2, y2)) {
+							current.front = new PartitionHallway(x1, y1, x2, y2);
+						}
+						else {
+							current.front = new WalledRoom(x1, y1, x2, y2);
+							return (WalledRoom) current.front;
+						}
+					}
+					if(current.front.getClass() == WalledRoom.class) return (WalledRoom) current.front;
+					current = (PartitionHallway) current.front;
 				}
 				else {
-					if(currentNode.front == null) {
-						currentNode.front = new HallwayRoom();
-						rand.setSeed(worldSeed + currentNode.coord + 2);
-						// 2 was chosen by dice-roll, guaranteed to be random
-						currentNode.front.coord = randomNormal(currentNode.totalArea.y1, currentNode.totalArea.y2);
-						currentNode.front.totalArea = new Border(currentNode.coord, currentNode.totalArea.y1,
-								currentNode.totalArea.x2, currentNode.totalArea.y2);
-					}
-					currentNode = currentNode.front;
+					return current.hallway; // If it is not on either side, it must be inside it
 				}
-				currentNode.isVertical = false;
 			}
 			else {
-				if(pos.getZ() < currentNode.coord) {
-					if(currentNode.back == null) {
-						currentNode.back = new HallwayRoom();
-						rand.setSeed(worldSeed + currentNode.coord + 3);
-						currentNode.back.coord = randomNormal(currentNode.totalArea.x1, currentNode.totalArea.x2);
-						currentNode.back.totalArea = new Border(currentNode.totalArea.x1, currentNode.totalArea.y1,
-								currentNode.totalArea.x2, currentNode.coord);
+				if(pos.getZ() < current.hallway.y1) { // Down
+					if(current.back == null) {
+						y2 = current.hallway.y1;
+						if(isBisectable(x1, y1, x2, y2)) {
+							current.back = new PartitionHallway(x1, y1, x2, y2);
+						}
+						else {
+							current.back = new WalledRoom(x1, y1, x2, y2);
+							return (WalledRoom) current.back;
+						}
 					}
-					currentNode = currentNode.back;
+					if(current.back.getClass() == WalledRoom.class) return (WalledRoom) current.back;
+					current = (PartitionHallway) current.back;
+				}
+				else if(pos.getZ() >= current.hallway.y2) { // Up
+					if(current.front == null) {
+						y1 = current.hallway.y2;
+						if(isBisectable(x1, y1, x2, y2)) {
+							current.front = new PartitionHallway(x1, y1, x2, y2);
+						}
+						else {
+							current.front = new WalledRoom(x1, y1, x2, y2);
+							return (WalledRoom) current.front;
+						}
+					}
+					if(current.front.getClass() == WalledRoom.class) return (WalledRoom) current.front;
+					current = (PartitionHallway) current.front;
 				}
 				else {
-					if(currentNode.front == null) {
-						currentNode.front = new HallwayRoom();
-						rand.setSeed(worldSeed + currentNode.coord + 8);
-						currentNode.front.coord = randomNormal(currentNode.totalArea.x1, currentNode.totalArea.x2);
-						currentNode.front.totalArea = new Border(currentNode.totalArea.x1, currentNode.coord,
-								currentNode.totalArea.x2, currentNode.totalArea.y2);
-					}
-					currentNode = currentNode.front;
+					return current.hallway; // If it is not on either side, it must be inside it
 				}
-				currentNode.isVertical = true;
 			}
-//			float shapeRatio = (float)currentNode.serviceArea.getHeight() / (float)currentNode.serviceArea.getWidth();
-		} while((currentNode.totalArea.getWidth() > 100 &&
-				currentNode.totalArea.getHeight() > 100) ||
-				currentNode.totalArea.getArea() > 50000);
-		
-		return currentNode.totalArea;
+		} while(true);
+	}
+	
+	private static void setSeed(long seed) {
+		rand.setSeed(worldSeed + seed);
 	}
 	
 	// Use a normal distribution to generate numbers that are more likely to be average (so rooms are more likely to
 	// be square-ish rather than very long and skinny)
-	private int randomNormal(int min, int max)
+	private static int randomNormal(int min, int max)
 	{
-		final double wackinessFactor = 0.25; // Lower values make more uniform rooms, higher values make wackier rooms
+		
+		assert (min < max);
+		
+		final double wackinessFactor = 2; // Lower values make more uniform rooms, higher values make wackier rooms
 		
 		int difference = max - min;
 		int average = (min + max) / 2;
@@ -134,38 +151,38 @@ public class BackroomsMazeGenius
 		return scaledGaussian;
 	}
 	
-	// Space partition line
-	private static class HallwayRoom
+	boolean isBisectable(int x1, int y1, int x2, int y2)
 	{
-		public boolean isVertical; // if not, its horizontal
-		public int coord;
+		assert (x1 < x2);
+		assert (y1 < y2);
 		
-		public HallwayRoom front;
-		public HallwayRoom back;
-		
-		public Border totalArea;
+		return (x2 - x1) > 25 || (y2 - y1) > 25;
 	}
 	
-	// Space partition tree leaf
-	private static class Room
-	{
-		public Border bounds;
-		public int verticalHeight;
-	}
-	
-	public static class Border
+	public static class Area
 	{
 		public final int x1;
 		public final int y1;
 		public final int x2;
 		public final int y2;
 		
-		public Border(int x1, int y1, int x2, int y2)
+		public Area(int x1, int y1, int x2, int y2)
 		{
 			this.x1 = x1;
 			this.y1 = y1;
 			this.x2 = x2;
 			this.y2 = y2;
+			
+			assert (this.x1 < this.x2);
+			assert (this.y1 < this.y2);
+		}
+		
+		long getSeedFromState() {
+			return ((long) x1 << 1) + ((long) y1 << 2) + ((long) x2 << 3) + ((long) y2 << 4);
+		}
+		
+		void setSeedFromState() {
+			setSeed(getSeedFromState());
 		}
 		
 		public int getArea()
@@ -186,33 +203,120 @@ public class BackroomsMazeGenius
 		
 	}
 	
+	private static class PartitionHallway extends Area
+	{
+		
+		Hallway hallway;
+		// Could be another partition hallway or just a room
+		Area front;
+		Area back;
+		boolean isVertical;
+		
+		public PartitionHallway(int x1, int y1, int x2, int y2)
+		{
+			this(x1, y1, x2, y2, (x2 - x1) > (y2 - y1));
+		}
+		
+		public PartitionHallway(int x1, int y1, int x2, int y2, boolean isVertical)
+		{
+			super(x1, y1, x2, y2);
+			
+			setSeedFromState();
+			
+			int width = rand.nextInt(2, 6);
+			
+			if(isVertical) {
+				int centre = randomNormal(x1 + 7, x2 - 7);
+				hallway = new Hallway(centre - width / 2, y1, centre + width / 2, y2);
+			}
+			else {
+				int centre = randomNormal(y1 + 7, y2 - 7);
+				hallway = new Hallway(x1, centre - width / 2, x2, centre + width / 2);
+			}
+			
+			this.isVertical = isVertical;
+		}
+		
+		long getSeedFromState()
+		{
+			return (super.getSeedFromState() << 1) + (isVertical ? 1 : 0);
+		}
+		
+	}
 	
-//	private static class Room1 extends Border {
-//
-//		public final int height;
-//
-//		public Room1(int x1, int y1, int x2, int y2, int height)
-//		{
-//			super(x1, y1, x2, y2);
-//			this.height = height;
-//		}
-//	}
-//
-//
-//	private static class PartitionHallway extends Room1 {
-//
-//		public PartitionHallway(int x1, int y1, int x2, int y2, int height)
-//		{
-//			super(x1, y1, x2, y2, height);
-//		}
-//
-//		Room1 hallwayRoom;
-//
-//		PartitionHallway front;
-//		PartitionHallway back;
-//
-//		boolean isVertical;
-//	}
-
-
+	public static abstract class Room extends Area {
+		public Room(int x1, int y1, int x2, int y2)
+		{
+			super(x1, y1, x2, y2);
+		}
+		
+		public abstract BlockState getBlockAt(Vec3i pos);
+		
+	}
+	
+	private static class Hallway extends Room
+	{
+		private static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
+		
+		public Hallway(int x1, int y1, int x2, int y2)
+		{
+			super(x1, y1, x2, y2);
+		}
+		
+		@Override
+		public BlockState getBlockAt(Vec3i pos)
+		{
+			assert(pos.getX() >= x1 && pos.getX() < x2);
+			assert(pos.getZ() >= y1 && pos.getZ() < y2);
+			
+			return AIR;
+		}
+	}
+	
+	public static class WalledRoom extends Room
+	{
+		
+		private static final BlockState WALL = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		private static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
+		
+		BlockState[][] blockStates;
+		
+		public WalledRoom(int x1, int y1, int x2, int y2)
+		{
+			super(x1, y1, x2, y2);
+			
+			blockStates = new BlockState[getHeight()][getWidth()];
+			
+			setSeedFromState();
+			
+			for(int y = 0; y < blockStates.length; y++) {
+				for(int x = 0; x < blockStates[0].length; x++) {
+					
+					if(x == 0 || y == 0 || x == blockStates[0].length-1 || y == blockStates.length-1) {
+						blockStates[y][x] = WALL;
+					} else {
+						blockStates[y][x] = AIR;
+					}
+				}
+			}
+			
+		}
+		
+		@Override
+		public BlockState getBlockAt(Vec3i pos) {
+			
+			assert(pos.getX() >= x1 && pos.getX() < x2);
+			assert(pos.getZ() >= y1 && pos.getZ() < y2);
+			
+			Vec3i relativePos = getRelativePos(pos);
+			
+			return blockStates[relativePos.getZ()][relativePos.getX()];
+		}
+		
+		private Vec3i getRelativePos(Vec3i pos) {
+			
+			return pos.add(-x1, 0, -y1);
+		}
+		
+	}
 }
