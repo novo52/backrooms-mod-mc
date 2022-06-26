@@ -1,4 +1,4 @@
-package net.fabricmc.example.gen;
+package net.fabricmc.example.world.gen;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Identifier;

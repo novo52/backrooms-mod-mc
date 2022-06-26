@@ -1,9 +1,10 @@
-package net.fabricmc.example.gen;
+package net.fabricmc.example.world.gen.chunk;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.fabricmc.example.world.biome.ModBiomes;
+import net.fabricmc.example.world.gen.BackroomsMazeGenius;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureSet;
 import net.minecraft.util.Identifier;
@@ -12,7 +13,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
@@ -20,7 +20,6 @@ import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
-import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.chunk.Chunk;
@@ -46,7 +45,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	private final Registry<Biome> biomeRegistry;
 	
 	public BackroomsChunkGenerator(Registry<StructureSet> registry, Registry<Biome> biomeRegistry) {
-		super(registry, Optional.empty(), new FixedBiomeSource(biomeRegistry.getOrCreateEntry(BiomeKeys.PLAINS)));
+		super(registry, Optional.empty(), new FixedBiomeSource(biomeRegistry.getOrCreateEntry(ModBiomes.getLevel1())));
 		this.biomeRegistry = biomeRegistry;
 	}
 	
