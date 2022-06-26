@@ -3,6 +3,9 @@
 ![](iconic.png)
 ![](layout.png)
 
+## About
+
+This mod is for Minecraft 1.18.2 with Fabric Loader
 
 ## Features so far
 - 🟩 Backrooms blocks
@@ -17,7 +20,7 @@
   - 🟥 Noclipping to enter
 - 🟥 Spawn in the backrooms world generation option
 
-## Setup
+## Building
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+For building instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
 
