@@ -1,7 +1,7 @@
 # Backrooms Mod
 
 ![](iconic.png)
-![](layout.png)
+![](generated1.png)
 
 ## About
 
