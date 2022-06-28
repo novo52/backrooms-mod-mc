@@ -5,7 +5,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.registry.Registry;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 /*
 
@@ -17,7 +17,7 @@ To find the block at a specific pos, a tree lookup will occur and the tree will 
 public class BackroomsMazeGenius
 {
 	private static BackroomsMazeGenius instance = null;
-	private static final Random rand = new Random();
+	private static final SecureRandom rand = new SecureRandom();
 	private PartitionHallway root;
 	private static long worldSeed;
 	
@@ -68,12 +68,11 @@ public class BackroomsMazeGenius
 							current.back = new PartitionHallway(x1, y1, x2, y2);
 						}
 						else {
-							current.back = new WalledRoom(x1, y1, x2, y2);
-							return (WalledRoom) current.back;
+							current.back = new WalledDooredRoom(x1, y1, x2, y2);
+							return (Room) current.back;
 						}
 					}
-					
-					if(current.back.getClass() == WalledRoom.class) return (WalledRoom) current.back;
+					if(current.back.getClass() == WalledDooredRoom.class) return (Room) current.back;
 					current = (PartitionHallway) current.back;
 				}
 				else if(pos.getX() >= current.hallway.x2) { // Right
@@ -83,11 +82,11 @@ public class BackroomsMazeGenius
 							current.front = new PartitionHallway(x1, y1, x2, y2);
 						}
 						else {
-							current.front = new WalledRoom(x1, y1, x2, y2);
-							return (WalledRoom) current.front;
+							current.front = new WalledDooredRoom(x1, y1, x2, y2);
+							return (Room) current.front;
 						}
 					}
-					if(current.front.getClass() == WalledRoom.class) return (WalledRoom) current.front;
+					if(current.front.getClass() == WalledDooredRoom.class) return (Room) current.front;
 					current = (PartitionHallway) current.front;
 				}
 				else {
@@ -102,11 +101,11 @@ public class BackroomsMazeGenius
 							current.back = new PartitionHallway(x1, y1, x2, y2);
 						}
 						else {
-							current.back = new WalledRoom(x1, y1, x2, y2);
-							return (WalledRoom) current.back;
+							current.back = new WalledDooredRoom(x1, y1, x2, y2);
+							return (Room) current.back;
 						}
 					}
-					if(current.back.getClass() == WalledRoom.class) return (WalledRoom) current.back;
+					if(current.back.getClass() == WalledDooredRoom.class) return (Room) current.back;
 					current = (PartitionHallway) current.back;
 				}
 				else if(pos.getZ() >= current.hallway.y2) { // Up
@@ -116,11 +115,11 @@ public class BackroomsMazeGenius
 							current.front = new PartitionHallway(x1, y1, x2, y2);
 						}
 						else {
-							current.front = new WalledRoom(x1, y1, x2, y2);
-							return (WalledRoom) current.front;
+							current.front = new WalledDooredRoom(x1, y1, x2, y2);
+							return (Room) current.front;
 						}
 					}
-					if(current.front.getClass() == WalledRoom.class) return (WalledRoom) current.front;
+					if(current.front.getClass() == WalledDooredRoom.class) return (Room) current.front;
 					current = (PartitionHallway) current.front;
 				}
 				else {
@@ -139,7 +138,7 @@ public class BackroomsMazeGenius
 	private static int randomNormal(int min, int max)
 	{
 		
-		assert (min < max);
+		assert (min <= max);
 		
 		final double wackinessFactor = 2; // Lower values make more uniform rooms, higher values make wackier rooms
 		
@@ -156,7 +155,7 @@ public class BackroomsMazeGenius
 		assert (x1 < x2);
 		assert (y1 < y2);
 		
-		return (x2 - x1) > 25 || (y2 - y1) > 25;
+		return (x2 - x1) > 10 || (y2 - y1) > 10;
 	}
 	
 	public static class Area
@@ -173,16 +172,17 @@ public class BackroomsMazeGenius
 			this.x2 = x2;
 			this.y2 = y2;
 			
-			assert (this.x1 < this.x2);
-			assert (this.y1 < this.y2);
+			assert (this.x1 <= this.x2);
+			assert (this.y1 <= this.y2);
 		}
 		
 		long getSeedFromState() {
-			return ((long) x1 << 1) + ((long) y1 << 2) + ((long) x2 << 3) + ((long) y2 << 4);
+			return ((long) (x1+y1))<<32 + ((long) (x2+y2));
 		}
 		
 		void setSeedFromState() {
-			setSeed(getSeedFromState());
+			long seed = getSeedFromState();
+			setSeed(seed);
 		}
 		
 		public int getArea()
@@ -223,15 +223,13 @@ public class BackroomsMazeGenius
 			
 			setSeedFromState();
 			
-			int width = rand.nextInt(2, 6);
-			
 			if(isVertical) {
-				int centre = randomNormal(x1 + 7, x2 - 7);
-				hallway = new Hallway(centre - width / 2, y1, centre + width / 2, y2);
+				int centre = randomNormal(x1 + 5, x2 - 5);
+				hallway = new Hallway(centre, y1, centre, y2);
 			}
 			else {
-				int centre = randomNormal(y1 + 7, y2 - 7);
-				hallway = new Hallway(x1, centre - width / 2, x2, centre + width / 2);
+				int centre = randomNormal(y1 + 5, y2 - 5);
+				hallway = new Hallway(x1, centre, x2, centre);
 			}
 			
 			this.isVertical = isVertical;
@@ -245,19 +243,37 @@ public class BackroomsMazeGenius
 	}
 	
 	public static abstract class Room extends Area {
+		
+		protected static final BlockState WALL = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		protected static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
 		public Room(int x1, int y1, int x2, int y2)
 		{
 			super(x1, y1, x2, y2);
 		}
 		
-		public abstract BlockState getBlockAt(Vec3i pos);
+		Vec3i getRelativePos(Vec3i pos) {
+			
+			return pos.add(-x1, 0, -y1);
+		}
+		
+		public BlockState getBlockAt(Vec3i pos) {
+			if(!generated) {
+				generate();
+				generated = true;
+			}
+			
+			return getBlockAtRelative(getRelativePos(pos));
+		}
+		
+		protected abstract BlockState getBlockAtRelative(Vec3i pos);
+		
+		boolean generated = false;
+		protected abstract void generate();
 		
 	}
 	
 	private static class Hallway extends Room
 	{
-		private static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
-		
 		public Hallway(int x1, int y1, int x2, int y2)
 		{
 			super(x1, y1, x2, y2);
@@ -266,57 +282,124 @@ public class BackroomsMazeGenius
 		@Override
 		public BlockState getBlockAt(Vec3i pos)
 		{
-			assert(pos.getX() >= x1 && pos.getX() < x2);
-			assert(pos.getZ() >= y1 && pos.getZ() < y2);
+			assert (pos.getX() >= x1 && pos.getX() < x2);
+			assert (pos.getZ() >= y1 && pos.getZ() < y2);
 			
 			return AIR;
 		}
+		
+		@Override
+		protected BlockState getBlockAtRelative(Vec3i pos)
+		{
+			return null;
+		}
+		
+		@Override
+		protected void generate()
+		{}
+		
 	}
 	
 	public static class WalledRoom extends Room
 	{
-		
-		private static final BlockState WALL = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
-		private static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
-		
 		BlockState[][] blockStates;
 		
 		public WalledRoom(int x1, int y1, int x2, int y2)
 		{
 			super(x1, y1, x2, y2);
 			
-			blockStates = new BlockState[getHeight()][getWidth()];
+		}
+		
+		@Override
+		protected BlockState getBlockAtRelative(Vec3i pos)
+		{
+			assert (pos.getX() >= 0 && pos.getX() < getWidth());
+			assert (pos.getZ() >= 0 && pos.getZ() < getHeight());
 			
-			setSeedFromState();
+			return blockStates[pos.getZ()][pos.getX()];
+		}
+		
+		@Override
+		protected void generate()
+		{
+			blockStates = new BlockState[getHeight()][getWidth()];
 			
 			for(int y = 0; y < blockStates.length; y++) {
 				for(int x = 0; x < blockStates[0].length; x++) {
 					
-					if(x == 0 || y == 0 || x == blockStates[0].length-1 || y == blockStates.length-1) {
+					if(x == 0 || y == 0) { //|| x == blockStates[0].length-1 || y == blockStates.length-1) {
 						blockStates[y][x] = WALL;
 					} else {
 						blockStates[y][x] = AIR;
 					}
 				}
 			}
-			
 		}
 		
-		@Override
-		public BlockState getBlockAt(Vec3i pos) {
-			
-			assert(pos.getX() >= x1 && pos.getX() < x2);
-			assert(pos.getZ() >= y1 && pos.getZ() < y2);
-			
-			Vec3i relativePos = getRelativePos(pos);
-			
-			return blockStates[relativePos.getZ()][relativePos.getX()];
+	}
+	
+	public static class WalledDooredRoom extends WalledRoom {
+
+		public WalledDooredRoom(int x1, int y1, int x2, int y2)
+		{
+			super(x1, y1, x2, y2);
 		}
 		
-		private Vec3i getRelativePos(Vec3i pos) {
+		protected void generate() {
 			
-			return pos.add(-x1, 0, -y1);
+			super.generate();
+			
+			// Randomly add doors
+			setSeedFromState();
+			
+			// "Discover" adjacent rooms
+			final BackroomsMazeGenius bmg = BackroomsMazeGenius.getInstance();
+			
+			// Left
+			Room adjacent = bmg.getRoomAt(new Vec3i(x1-1, 0, y1));
+			boolean replaceStart = false;
+			do {
+				if(rand.nextInt(5) <= 2) {
+					int start = Math.max(0, adjacent.y1-y1) + (replaceStart ? 0 : 1);
+					int end = Math.min(getHeight(), adjacent.y2-y1);
+					for(int y = start; y < end; y++) {
+						blockStates[y][0] = AIR;
+					}
+					replaceStart = true;
+				} else {
+					replaceStart = false;
+				}
+				
+				if(adjacent.y2 >= y2) break;
+
+				adjacent = bmg.getRoomAt(new Vec3i(x1 - 1, 0, adjacent.y2));
+				
+			} while (true);
+			
+			// Down
+			adjacent = bmg.getRoomAt(new Vec3i(x1, 0, y1-1));
+			replaceStart = false;
+			do {
+				if(rand.nextInt(5) <= 2) {
+					int start = Math.max(0, adjacent.x1-x1) + (replaceStart ? 0 : 1);
+					int end = Math.min(getWidth(), adjacent.x2-x1);
+					for(int x = start; x < end; x++) {
+						blockStates[0][x] = AIR;
+					}
+					replaceStart = true;
+				} else {
+					replaceStart = false;
+				}
+				
+				if(adjacent.x2 >= x2) break;
+				
+				adjacent = bmg.getRoomAt(new Vec3i(adjacent.x2, 0, y1-1));
+				
+			} while (true);
+			
+			// Remove the corner if it is by itself
+			if(blockStates[1][0] == AIR && blockStates[0][1] == AIR) blockStates[0][0] = AIR;
+			
 		}
-		
 	}
 }

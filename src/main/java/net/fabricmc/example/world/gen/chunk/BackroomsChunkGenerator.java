@@ -106,7 +106,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 		BlockState floorState = Registry.BLOCK.get(new Identifier("backrooms:moldy_carpet")).getDefaultState();
 		int floorHeight = 0;
 		
-		BlockState ceilState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_tile")).getDefaultState();
+		BlockState ceilTileState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_tile")).getDefaultState();
+		BlockState ceilLightState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_light")).getDefaultState();
 		int ceilHeight = 5;
 		
 		BlockState innerRoomState;
@@ -120,14 +121,18 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 				heightmap2.trackUpdate(k, floorHeight, l, floorState);
 				
 				// Ceiling
-//				chunk.setBlockState(mutable.set(k, ceilHeight, l), ceilState, false);
+				if(k % 4 == 0 && (l & 2) != 0) {
+					chunk.setBlockState(mutable.set(k, ceilHeight, l), ceilLightState, false);
+				} else {
+					chunk.setBlockState(mutable.set(k, ceilHeight, l), ceilTileState, false);
+				}
 				
 				// Walls
 				int x = chunk.getPos().getOffsetX(k);
 				int z = chunk.getPos().getOffsetZ(l);
 				innerRoomState = bmg.getBlockStateAt(new Vec3i(x, 0, z));
 				if(!innerRoomState.isAir()) {
-					for(int i = 1; i < 5; i++) {
+					for(int i = 1; i < ceilHeight; i++) {
 						chunk.setBlockState(mutable.set(k, i, l), innerRoomState, false);
 					}
 				}
