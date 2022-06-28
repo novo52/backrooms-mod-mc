@@ -16,7 +16,7 @@ public class ModBiomes
 	private static final RegistryKey<Biome> LEVEL_1 = RegistryKey.of(Registry.BIOME_KEY, new Identifier(modID, "level_1"));
 	
 	public static void register() {
-		BackroomsMod.LOGGER.info("Registering Biomes");
+		BackroomsMod.LOGGER.debug("Registering Biomes");
 		
 		Registry.register(BuiltinRegistries.BIOME, LEVEL_1.getValue(), createLevel1());
 	}
