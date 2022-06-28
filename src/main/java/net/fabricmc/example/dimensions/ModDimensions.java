@@ -21,6 +21,6 @@ public class ModDimensions
 	);
 	
 	public static void register() {
-		BackroomsMod.LOGGER.info("Registering ModDimensions");
+		BackroomsMod.LOGGER.info("Registering Dimensions");
 	}
 }
