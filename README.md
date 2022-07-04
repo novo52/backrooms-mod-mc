@@ -12,8 +12,9 @@ This mod is for Minecraft 1.18.2 with Fabric Loader
   - 🟥 Fluorescent light buzz
 - 🟩 Backrooms dimension
 - 🆗 Custom world generation
-  - 🟩 Room based world generation
-  - 🟥 Non euclidean world generation (immersive portals)
+  - 🟩 Room based world generation 
+  - 🆗 Non euclidean world generation (immersive portals)
+    - 🟥 Far away portals link together
   - 🟥 Multiple levels (as biomes)
 - 🟥 Entities?
 - 🟥 Entry portal and exit level
