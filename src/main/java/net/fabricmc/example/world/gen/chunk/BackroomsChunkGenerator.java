@@ -2,6 +2,7 @@ package net.fabricmc.example.world.gen.chunk;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.fabricmc.example.BackroomsMod;
 import net.fabricmc.example.world.biome.ModBiomes;
 import net.fabricmc.example.world.dimension.ModDimensions;
 import net.minecraft.block.BlockState;
@@ -9,9 +10,7 @@ import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureSet;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.RegistryOps;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.*;
@@ -26,11 +25,12 @@ import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import qouteall.imm_ptl.core.portal.Portal;
+import qouteall.imm_ptl.core.portal.PortalManipulation;
+import qouteall.q_misc_util.my_util.DQuaternion;
 
-import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -42,10 +42,17 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 					)
 					.apply(instance, instance.stable(BackroomsChunkGenerator::new))
 	);
-	private static final SecureRandom rand = new SecureRandom();
+	private static final Random rand = new Random();
 	private final Registry<Biome> biomeRegistry;
 	private PartitionHallway root;
-	private long worldSeed;
+	
+	static final int floorHeight = 0;
+	static final int ceilHeight = 5;
+	
+	private static final int PORTAL_CHUNK_SIZE = 128;
+	private static final int WORLD_RADIUS = 32767;
+
+	private static final int PORTAL_CHUNK_WORLD_RADIUS = WORLD_RADIUS / PORTAL_CHUNK_SIZE;
 	
 	public BackroomsChunkGenerator(Registry<StructureSet> registry, Registry<Biome> biomeRegistry)
 	{
@@ -62,7 +69,6 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 	@Override
 	public ChunkGenerator withSeed(long seed)
 	{
-		this.worldSeed = seed;
 		return this;
 	}
 	
@@ -82,23 +88,118 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 	@Override
 	public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor)
 	{
-		// spawn portals
-		for(int k = 0; k < 16; ++k) {
-			for(int l = 0; l < 16; ++l) {
-				int x = chunk.getPos().getOffsetX(k);
-				int z = chunk.getPos().getOffsetZ(l);
-				Vec3i pos = new Vec3i(x, 0, z);
-				WalledDooredRoom innerRoom = (WalledDooredRoom) getRoomAt(pos);
-				
-				if(innerRoom.portalsSpawned) continue;
-				innerRoom.portalsSpawned = true;
-				
-				if(innerRoom.portalLocations.size() == 0) continue;
-				
-				Area area = innerRoom.portalLocations.get(0);
-				createShortcutPortalsFromArea(world.toServerWorld(), area);
-				
-				
+		
+		Vec3i currentPortalChunk = posToPortalChunk(chunk.getPos().getCenterAtY(0));
+		Vec3i idealPortalGenerationPos = getIdealPortalPosInPortalChunk(currentPortalChunk);
+		
+		if(idealPortalGenerationPos.getX() < chunk.getPos().getStartX()) return;
+		if(idealPortalGenerationPos.getX() >= chunk.getPos().getEndX()) return;
+		if(idealPortalGenerationPos.getZ() < chunk.getPos().getStartZ()) return;
+		if(idealPortalGenerationPos.getZ() >= chunk.getPos().getEndZ()) return;
+		
+		// the portal is in this chunk
+		
+		WalledDooredRoom startRoom = (WalledDooredRoom) getRoomAt(idealPortalGenerationPos);
+		Area startPortalArea = startRoom.getPortalLocation();
+		int startPortalLength = Math.max(startPortalArea.getWidth(), startPortalArea.getHeight());
+		
+		// For now, to get the end room we just swap x and z
+		Vec3i involutedPortalChunk = getInvolution(currentPortalChunk, world.getSeed());
+		Vec3i idealInvolutedPortalGenerationPos = getIdealPortalPosInPortalChunk(involutedPortalChunk);
+		WalledDooredRoom endRoom = (WalledDooredRoom) getRoomAt(idealInvolutedPortalGenerationPos);
+		Area endPortalArea = endRoom.getPortalLocation();
+		if(endPortalArea == null) return;
+		int endPortalLength = Math.max(endPortalArea.getWidth(), endPortalArea.getHeight());
+		
+		// The shorter length of the two is used so that there is no weird overlapping or clipping
+		int portalLength = Math.min(startPortalLength, endPortalLength);
+		
+		if(startPortalLength > portalLength) {
+			if(startPortalArea.getHeight() == 0) {
+				startPortalArea = new Area(
+						startPortalArea.x1, startPortalArea.y1,
+						startPortalArea.x1 + portalLength, startPortalArea.y2);
+			}
+			else if(startPortalArea.getWidth() == 0) {
+				startPortalArea = new Area(
+						startPortalArea.x1, startPortalArea.y1,
+						startPortalArea.x2, startPortalArea.y1 + portalLength);
+			}
+			else assert (false);
+		} // now (startPortalLength == portalLength)
+		
+		if(endPortalLength > portalLength) {
+			if(endPortalArea.getHeight() == 0) {
+				endPortalArea = new Area(
+						endPortalArea.x1, endPortalArea.y1,
+						endPortalArea.x1 + portalLength, endPortalArea.y2);
+			}
+			else if(endPortalArea.getWidth() == 0) {
+				endPortalArea = new Area(
+						endPortalArea.x1, endPortalArea.y1,
+						endPortalArea.x2, endPortalArea.y1 + portalLength);
+			}
+			else assert (false);
+		}
+		
+		if(!startRoom.portalSpawned) {
+			startRoom.portalSpawned = true;
+			endRoom.portalSpawned = true;
+			
+			// Create the portal on our side
+			// Once the portal is created, it will load the chunk on the other side, which will complete the link
+			Vec3d portalRightVector = (startPortalArea.getWidth() == 0 ?
+					new Vec3d(0, 0, 1) :
+					new Vec3d(1, 0, 0));
+			
+			final Vec3d portalUpVector = new Vec3d(0, 1, 0);
+			
+			double rotationTransformationY = 0;
+			Vec3d startPos = startPortalArea.getCentre().add(0, 2.5, 0);
+			if(startPortalArea.getWidth() == 0) {
+				startPos = startPos.add(0.5, 0, 0);
+				if(endPortalArea.getHeight() == 0) rotationTransformationY = 90; // Vert start and horiz end
+			}
+			else {
+				startPos = startPos.add(0, 0, 0.5);
+				if(endPortalArea.getWidth() == 0) rotationTransformationY = 90; // Horiz start and vert end
+			}
+			
+			Vec3d endPos = endPortalArea.getCentre().add(0, 2.5, 0);
+			if(endPortalArea.getWidth() == 0) {
+				endPos = endPos.add(0.5, 0, 0);
+			}
+			else {
+				endPos = endPos.add(0, 0, 0.5);
+			}
+			
+			Portal startPortal = createPortal(world.toServerWorld(),
+					startPos, endPos,
+					portalRightVector, portalUpVector,
+					rotationTransformationY,
+					portalLength, 5);
+			
+			PortalManipulation.completeBiWayBiFacedPortal(startPortal,
+					p -> BackroomsMod.LOGGER.debug("Removed portal"),
+					p -> BackroomsMod.LOGGER.debug("Added portal"),
+					Portal.entityType);
+		}
+		
+		// Now we need to close the gap from the larger portal being cut down (if they were different sizes)
+		final BlockState wallpaperState = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		if(startPortalLength > portalLength) {
+			if(startPortalArea.getWidth() == 0) {
+				for(int z = startPortalArea.y2; z < startPortalArea.y1+startPortalLength; z++) {
+					for(int y = floorHeight+1; y < ceilHeight; y++) {
+						world.setBlockState(new BlockPos(startPortalArea.x1, y, z), wallpaperState, 0);
+					}
+				}
+			} else {
+				for(int x = startPortalArea.x2; x < startPortalArea.x1+startPortalLength; x++) {
+					for(int y = floorHeight+1; y < ceilHeight; y++) {
+						world.setBlockState(new BlockPos(x, y, startPortalArea.y1), wallpaperState, 0);
+					}
+				}
 			}
 		}
 	}
@@ -141,11 +242,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		Heightmap worldSurfaceHeightmap = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE_WG);
 		
 		BlockState floorState = Registry.BLOCK.get(new Identifier("backrooms:moldy_carpet")).getDefaultState();
-		int floorHeight = 0;
-		
 		BlockState ceilTileState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_tile")).getDefaultState();
 		BlockState ceilLightState = Registry.BLOCK.get(new Identifier("backrooms:ceiling_light")).getDefaultState();
-		int ceilHeight = 5;
 		
 		BlockState innerRoomState;
 		
@@ -209,17 +307,28 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 
 	public BlockState getBlockStateAt(Vec3i pos)
 	{
+		// Return air for any block outside the worldborder
+		if(pos.getX() >= WORLD_RADIUS-10 || pos.getX() <= -WORLD_RADIUS+10
+		|| pos.getZ() >= WORLD_RADIUS-10 || pos.getZ() <= -WORLD_RADIUS+10)
+			return Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		
 		return getRoomAt(pos).getBlockAt(pos);
 	}
-
-	// Returns the room object at a position
+	
+	/**
+	 * The actual structure of the backrooms is an axis-aligned binary space partition tree.
+	 * This function traverses the tree, generating new nodes if needed until a leaf is reached
+	 *
+	 * @param pos A block position
+	 * @return The room at that position, or the closest room if {@code pos} is outside {@code WORLD_RADIUS}
+	 */
 	public Room getRoomAt(Vec3i pos)
 	{
 		
 		// create root if needed
 		if(root == null) {
-			final int worldBorder = 32767;
-			root = new PartitionHallway(-worldBorder, -worldBorder, worldBorder, worldBorder, rand.nextBoolean());
+			
+			root = new PartitionHallway(-WORLD_RADIUS, -WORLD_RADIUS, WORLD_RADIUS, WORLD_RADIUS, rand.nextBoolean());
 		}
 		
 		// start at root and iterate thru the tree, creating partitions if needed
@@ -301,6 +410,44 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		} while(true);
 	}
 	
+	/**
+	 * Used to generate pairs of coordinates for the portal generation<br>
+	 *
+	 * Using the seed, returns a new coordinate which, when passed into this function again, will return the
+	 * original coordinate. <br>
+	 *
+	 * e.g. getRandomInvolution(getRandomInvolution(pos)) == pos.<br>
+	 *
+	 * <a href="https://en.wikipedia.org/wiki/Involution_(mathematics)">Involution (Wikipedia)</a>
+	 */
+	private Vec3i getInvolution(Vec3i pos, long seed) {
+		long truncatedSeed = seed & PORTAL_CHUNK_WORLD_RADIUS;
+		
+		long x = ((pos.getX() & PORTAL_CHUNK_WORLD_RADIUS) ^ truncatedSeed) & PORTAL_CHUNK_WORLD_RADIUS;
+		long z = ((pos.getZ() & PORTAL_CHUNK_WORLD_RADIUS) ^ truncatedSeed) & PORTAL_CHUNK_WORLD_RADIUS;
+		
+		return new Vec3i(x, pos.getY(), z);
+	}
+	
+	private Vec3i posToPortalChunk(Vec3i pos) {
+		// Round towards negative infinity instead of towards 0
+		int x = pos.getX()/ PORTAL_CHUNK_SIZE;
+		if(pos.getX() < 0) x--;
+		int z = pos.getZ()/ PORTAL_CHUNK_SIZE;
+		if(pos.getZ() < 0) z--;
+
+		return new Vec3i(x, pos.getY(), z);
+	}
+	
+	private Vec3i portalChunkToPos(Vec3i portalChunkPos) {
+		return new Vec3i(portalChunkPos.getX() * PORTAL_CHUNK_SIZE, portalChunkPos.getY(), portalChunkPos.getZ() * PORTAL_CHUNK_SIZE);
+	}
+	
+	private Vec3i getIdealPortalPosInPortalChunk(Vec3i portalChunkPos) {
+		Vec3i pos = portalChunkToPos(portalChunkPos);
+		return new Vec3i(pos.getX()+ PORTAL_CHUNK_SIZE /2, 0, pos.getZ()+ PORTAL_CHUNK_SIZE /2);
+	}
+	
 	private void createShortcutPortalsFromArea(World world, Area area)
 	{
 		
@@ -312,23 +459,23 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		if(area.getWidth() == 0) {
 			
 			final Vec3d pos = area.getCentre().add(0.25, 2.5, 0);
-			createPortal(world, pos, pos.add(0.5, 0, 0), zUnit, yUnit, area.getHeight(), 5);
+			createPortal(world, pos, pos.add(0.5, 0, 0), zUnit, yUnit, 0, area.getHeight(), 5);
 			
 			final Vec3d pos1 = area.getCentre().add(0.75, 2.5, 0);
-			createPortal(world, pos1, pos1.add(-0.5, 0, 0), zUnit.multiply(-1), yUnit, area.getHeight(), 5);
+			createPortal(world, pos1, pos1.add(-0.5, 0, 0), zUnit.multiply(-1), yUnit, 0, area.getHeight(), 5);
 		}
 		
 		// X-Axis aligned
 		else if(area.getHeight() == 0) {
 			final Vec3d pos = area.getCentre().add(0, 2.5, 0.25);
-			createPortal(world, pos, pos.add(0, 0, 0.5), xUnit.multiply(-1), yUnit, area.getWidth(), 5);
+			createPortal(world, pos, pos.add(0, 0, 0.5), xUnit.multiply(-1), yUnit, 0, area.getWidth(), 5);
 			
 			final Vec3d pos1 = area.getCentre().add(0, 2.5, 0.75);
-			createPortal(world, pos1, pos1.add(0, 0, -0.5), xUnit, yUnit, area.getWidth(), 5);
+			createPortal(world, pos1, pos1.add(0, 0, -0.5), xUnit, yUnit, 0, area.getWidth(), 5);
 		}
 	}
 	
-	boolean isBisectable(int x1, int y1, int x2, int y2)
+	private boolean isBisectable(int x1, int y1, int x2, int y2)
 	{
 		assert (x1 < x2);
 		assert (y1 < y2);
@@ -336,31 +483,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		return (x2 - x1) > 10 || (y2 - y1) > 10;
 	}
 	
-	// implementing an O(nlog(n)) algorithm in O(n^5) then walking away and continuing development 🥰
-//	public List<Room> getRoomsIn(Area area) {
-//
-//		ArrayList<Room> rooms = new ArrayList<>();
-//
-//		for(int y = area.y1; y < area.y2; y++) {
-//			for(int x = area.x1; x < area.x2; /* 😳 */) {
-//				Room room = getRoomAt(new Vec3i(x, 0, y));
-//
-//				if(!rooms.contains(room)) rooms.add(room);
-//
-//				// Skip to the x coord of the next room
-//				if(room.x2 < area.x2) {
-//					x = room.x2-1;
-//				} else {
-//					x = area.x2-1;
-//				}
-//			}
-//		}
-//
-//		return rooms;
-//	}
-	
 	private Portal createPortal(World world, Vec3d originPos, Vec3d destinationPos, Vec3d axisW, Vec3d axisH,
-								double width, double height)
+								double rotationY, double width, double height)
 	{
 		Portal portal = Portal.entityType.create(world);
 		assert (portal != null);
@@ -368,6 +492,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		portal.setDestinationDimension(ModDimensions.ROOMS);
 		portal.setDestination(destinationPos);
 		portal.setOrientationAndSize(axisW, axisH, width, height);
+		portal.setRotationTransformationD(DQuaternion.rotationByDegrees(new Vec3d(0, 1, 0), rotationY));
 		portal.world.spawnEntity(portal);
 		
 		return portal;
@@ -375,7 +500,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 	
 	private void setSeed(long seed)
 	{
-		rand.setSeed(worldSeed + seed);
+		rand.setSeed(seed);
 	}
 	
 	// Use a normal distribution to generate numbers that are more likely to be average (so rooms are more likely to
@@ -444,12 +569,19 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 			return new Vec3d(((double) x1 + (double) x2) / 2.0d, 0, ((double) y1 + (double) y2) / 2.0d);
 		}
 		
-		public boolean isInside(Vec3d pos)
+		public boolean contains(Vec3i pos)
 		{
-			return pos.getX() >= x1 && pos.getX() < x2 && pos.getY() >= y1 && pos.getY() < y2;
+			return pos.getX() >= x1 && pos.getX() < x2 && pos.getZ() >= y1 && pos.getZ() < y2;
 		}
 		
-		
+		@Override
+		public String toString() {
+			return String.format("%s{%sx%s: (%s, %s), (%s, %s)}@%s",
+					getClass().getSimpleName(),
+					getWidth(), getHeight(),
+					x1, y1, x2, y2,
+					Integer.toHexString(hashCode()));
+		}
 	}
 	
 	private class PartitionHallway extends Area
@@ -595,14 +727,12 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 	
 	public class WalledDooredRoom extends WalledRoom
 	{
-		
-		public final List<Area> portalLocations;
-		public boolean portalsSpawned = false;
+		public Area portalLocation = null;
+		public boolean portalSpawned = false;
 		
 		public WalledDooredRoom(int x1, int y1, int x2, int y2)
 		{
 			super(x1, y1, x2, y2);
-			portalLocations = new ArrayList<>();
 		}
 		
 		protected void generate()
@@ -613,71 +743,92 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 			// Randomly add doors
 			setSeedFromState();
 			
-			// Left
-			Room adjacent = getRoomAt(new Vec3i(x1 - 1, 0, y1));
-			boolean replaceStart = false;
-			do {
-				if(rand.nextInt(5) <= 2) {
-					int start = Math.max(0, adjacent.y1 - y1) + (replaceStart ? 0 : 1);
-					int end = Math.min(getHeight(), adjacent.y2 - y1);
-					for(int y = start; y < end; y++) {
-						blockStates[y][0] = AIR;
-					}
-					
-					// place portal
-					if(end - start > 2 && rand.nextInt(10) == 4) {
-						portalLocations.add(new Area(x1, y1 + start + 1, x1, y1 + end - 1));
-						
-						blockStates[start][0] = WALL;
-						blockStates[end - 1][0] = WALL;
-						
-					}
-					
-					replaceStart = true;
-				}
-				else {
-					replaceStart = false;
-				}
-				
-				if(adjacent.y2 >= y2) break;
-				
-				adjacent = getRoomAt(new Vec3i(x1 - 1, 0, adjacent.y2));
-				
-			} while(true);
+			boolean isPortalRoom =
+					contains(getIdealPortalPosInPortalChunk(posToPortalChunk(new Vec3i(x1, 0, y1))))
+					|| contains(getIdealPortalPosInPortalChunk(posToPortalChunk(new Vec3i(x1, 0, y2))))
+					|| contains(getIdealPortalPosInPortalChunk(posToPortalChunk(new Vec3i(x2, 0, y1))))
+					|| contains(getIdealPortalPosInPortalChunk(posToPortalChunk(new Vec3i(x2, 0, y2))));
 			
-			// Down
-			adjacent = getRoomAt(new Vec3i(x1, 0, y1 - 1));
-			replaceStart = false;
-			do {
-				if(rand.nextInt(5) <= 2) {
-					int start = Math.max(0, adjacent.x1 - x1) + (replaceStart ? 0 : 1);
-					int end = Math.min(getWidth(), adjacent.x2 - x1);
-					for(int x = start; x < end; x++) {
-						blockStates[0][x] = AIR;
-					}
-					
-					if(end - start > 2 && rand.nextInt(10) == 4) {
-						portalLocations.add(new Area(x1 + start + 1, y1, x1 + end - 1, y1));
-						
-						blockStates[0][start] = WALL;
-						blockStates[0][end - 1] = WALL;
-						
-					}
-					
-					replaceStart = true;
+			// portal room
+			if(isPortalRoom) {
+				setSeedFromState();
+				
+				// Vertical
+				if(rand.nextBoolean()) {
+					for(int y = 1; y < getHeight()-1; y++) blockStates[y][0] = AIR;
+					portalLocation = new Area(x1, y1+1, x1, y2-1);
 				}
+				
+				// Horizontal
 				else {
-					replaceStart = false;
+					for(int x = 1; x < getWidth()-1; x++) blockStates[0][x] = AIR;
+					portalLocation = new Area(x1+1, y1, x2-1, y1);
 				}
-				
-				if(adjacent.x2 >= x2) break;
-				
-				adjacent = getRoomAt(new Vec3i(adjacent.x2, 0, y1 - 1));
-				
-			} while(true);
+			}
 			
-			// Remove the corner if it is by itself
-			if(blockStates[1][0] == AIR && blockStates[0][1] == AIR) blockStates[0][0] = AIR;
+			// normal room
+			else {
+
+				// Left
+				Room adjacent = getRoomAt(new Vec3i(x1 - 1, 0, y1));
+				boolean replaceStart = false;
+				do {
+					if(rand.nextInt(5) <= 2) {
+						int start = Math.max(0, adjacent.y1 - y1) + (replaceStart ? 0 : 1);
+						int end = Math.min(getHeight(), adjacent.y2 - y1);
+						for(int y = start; y < end; y++) {
+							blockStates[y][0] = AIR;
+						}
+
+						replaceStart = true;
+					}
+					else {
+						replaceStart = false;
+					}
+
+					if(adjacent.y2 >= y2) break;
+
+					adjacent = getRoomAt(new Vec3i(x1 - 1, 0, adjacent.y2));
+
+				} while(true);
+
+				// Down
+				adjacent = getRoomAt(new Vec3i(x1, 0, y1 - 1));
+				replaceStart = false;
+				do {
+					if(rand.nextInt(5) <= 2) {
+						int start = Math.max(0, adjacent.x1 - x1) + (replaceStart ? 0 : 1);
+						int end = Math.min(getWidth(), adjacent.x2 - x1);
+						for(int x = start; x < end; x++) {
+							blockStates[0][x] = AIR;
+						}
+
+						replaceStart = true;
+					}
+					else {
+						replaceStart = false;
+					}
+
+					if(adjacent.x2 >= x2) break;
+
+					adjacent = getRoomAt(new Vec3i(adjacent.x2, 0, y1 - 1));
+
+				} while(true);
+
+				// Remove the corner if it is by itself
+				if(blockStates[1][0] == AIR && blockStates[0][1] == AIR) blockStates[0][0] = AIR;
+			}
+		}
+		
+		public Area getPortalLocation() {
+			if(portalLocation == null) {
+				assert (!generated) : String.format("Trying to get a portal from already generated room \"%s\" which does not have a portal", this);
+				generate();
+			}
+			
+			assert (portalLocation != null) : String.format("Trying to get a portal from not yet generated room \"%s\" which does not have a portal", this);
+			
+			return portalLocation;
 			
 		}
 	}
