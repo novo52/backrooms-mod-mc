@@ -7,7 +7,7 @@ This mod is for Minecraft 1.18.2 with Fabric Loader
 ## Features so far
 - 🟩 Backrooms blocks
   - 🟥 Fluorescent light buzz
-  - 🟥 Alternate wallpaper
+  - 🟩 Alternate wallpaper
   - 🟥 Light Switch + other atmospheric knickknacks
 - 🟩 Backrooms dimension
 - 🆗 Custom world generation
