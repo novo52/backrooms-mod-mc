@@ -25,6 +25,8 @@
   "mixins": [
     "backrooms.mixins.json"
   ],
+  "accessWidener" : "backrooms.accesswidener",
+
 
   "depends": {
     "fabricloader": ">=0.14.6",
