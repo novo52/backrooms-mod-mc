@@ -1,5 +1,8 @@
 {
-  "block.backrooms.wallpaper": "Wallpaper",
+  "block.backrooms.wallpaper_lined": "Lined Wallpaper",
+  "block.backrooms.wallpaper_dotted": "Dotted Wallpaper",
+  "block.backrooms.wallpaper_spotted": "Spotted Wallpaper",
+  "block.backrooms.wallpaper_symbolic": "Symbolic Wallpaper",
   "block.backrooms.ceiling_tile": "Ceiling Tile",
   "block.backrooms.ceiling_light": "Ceiling Light",
   "block.backrooms.moldy_carpet": "Moldy Carpet",

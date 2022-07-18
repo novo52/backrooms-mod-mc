@@ -14,15 +14,37 @@ import static net.fabricmc.example.BackroomsMod.modID;
 
 public class ModBlocks
 {
-	public static final Block WALLPAPER = new Block(FabricBlockSettings
+	public static final Identifier WALLPAPER_LINED_ID = new Identifier(modID, "wallpaper_lined");
+	public static final Block WALLPAPER_LINED = new Block(FabricBlockSettings
 			.of(Material.NETHER_WOOD)
 			.strength(4.0f));
+	
+	public static final Identifier WALLPAPER_DOTTED_ID = new Identifier(modID, "wallpaper_dotted");
+	public static final Block WALLPAPER_DOTTED = new Block(FabricBlockSettings
+			.of(Material.NETHER_WOOD)
+			.strength(4.0f));
+	
+	public static final Identifier WALLPAPER_SPOTTED_ID = new Identifier(modID, "wallpaper_spotted");
+	public static final Block WALLPAPER_SPOTTED = new Block(FabricBlockSettings
+			.of(Material.NETHER_WOOD)
+			.strength(4.0f));
+	
+	public static final Identifier WALLPAPER_SYMBOLIC_ID = new Identifier(modID, "wallpaper_symbolic");
+	public static final Block WALLPAPER_SYMBOLIC = new Block(FabricBlockSettings
+			.of(Material.NETHER_WOOD)
+			.strength(4.0f));
+	
+	public static final Identifier MOLDY_CARPET_ID = new Identifier(modID, "moldy_carpet");
 	public static final Block MOLDY_CARPET = new Block(FabricBlockSettings
 			.of(Material.WOOL)
 			.strength(4.0f));
+	
+	public static final Identifier CEILING_TILE_ID = new Identifier(modID, "ceiling_tile");
 	public static final Block CEILING_TILE = new Block(FabricBlockSettings
 			.of(Material.SPONGE)
 			.strength(4.0f));
+	
+	public static final Identifier CEILING_LIGHT_ID = new Identifier(modID, "ceiling_light");
 	public static final Block CEILING_LIGHT = new Block(FabricBlockSettings
 			.of(Material.GLASS)
 			.strength(4.0f)
@@ -32,20 +54,18 @@ public class ModBlocks
 		
 		BackroomsMod.LOGGER.debug("Registering Blocks");
 		
-		Registry.register(Registry.BLOCK, new Identifier(modID, "wallpaper"), WALLPAPER);
-		Registry.register(Registry.ITEM, new Identifier(modID, "wallpaper"),
-				new BlockItem(WALLPAPER, new FabricItemSettings().group(ItemGroup.BUILDING_BLOCKS)));
-		
-		Registry.register(Registry.BLOCK, new Identifier(modID, "moldy_carpet"), MOLDY_CARPET);
-		Registry.register(Registry.ITEM, new Identifier(modID, "moldy_carpet"),
-				new BlockItem(MOLDY_CARPET, new FabricItemSettings().group(ItemGroup.BUILDING_BLOCKS)));
-		
-		Registry.register(Registry.BLOCK, new Identifier(modID, "ceiling_tile"), CEILING_TILE);
-		Registry.register(Registry.ITEM, new Identifier(modID, "ceiling_tile"),
-				new BlockItem(CEILING_TILE, new FabricItemSettings().group(ItemGroup.BUILDING_BLOCKS)));
-		
-		Registry.register(Registry.BLOCK, new Identifier(modID, "ceiling_light"), CEILING_LIGHT);
-		Registry.register(Registry.ITEM, new Identifier(modID, "ceiling_light"),
-				new BlockItem(CEILING_LIGHT, new FabricItemSettings().group(ItemGroup.BUILDING_BLOCKS)));
+		registerBlock( WALLPAPER_LINED_ID, 		WALLPAPER_LINED	   );
+		registerBlock( WALLPAPER_DOTTED_ID, 	WALLPAPER_DOTTED   );
+		registerBlock( WALLPAPER_SPOTTED_ID, 	WALLPAPER_SPOTTED  );
+		registerBlock( WALLPAPER_SYMBOLIC_ID, 	WALLPAPER_SYMBOLIC );
+		registerBlock( MOLDY_CARPET_ID, 		MOLDY_CARPET	   );
+		registerBlock( CEILING_TILE_ID, 		CEILING_TILE	   );
+		registerBlock( CEILING_LIGHT_ID, 		CEILING_LIGHT	   );
+	}
+	
+	private static void registerBlock(Identifier id, Block block) {
+		Registry.register(Registry.BLOCK, id, block);
+		Registry.register(Registry.ITEM, id,
+				new BlockItem(block, new FabricItemSettings().group(ItemGroup.BUILDING_BLOCKS)));
 	}
 }

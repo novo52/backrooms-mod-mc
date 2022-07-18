@@ -3,9 +3,11 @@ package net.fabricmc.example.world.gen.chunk;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.example.BackroomsMod;
+import net.fabricmc.example.block.ModBlocks;
 import net.fabricmc.example.world.biome.ModBiomes;
 import net.fabricmc.example.world.dimension.ModDimensions;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureSet;
 import net.minecraft.util.Identifier;
@@ -186,7 +188,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		}
 		
 		// Now we need to close the gap from the larger portal being cut down (if they were different sizes)
-		final BlockState wallpaperState = Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+		final BlockState wallpaperState = ModBlocks.WALLPAPER_LINED.getDefaultState();
 		if(startPortalLength > portalLength) {
 			if(startPortalArea.getWidth() == 0) {
 				for(int z = startPortalArea.y2; z < startPortalArea.y1+startPortalLength; z++) {
@@ -310,7 +312,7 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 		// Return air for any block outside the worldborder
 		if(pos.getX() >= WORLD_RADIUS-10 || pos.getX() <= -WORLD_RADIUS+10
 		|| pos.getZ() >= WORLD_RADIUS-10 || pos.getZ() <= -WORLD_RADIUS+10)
-			return Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
+			return ModBlocks.WALLPAPER_LINED.getDefaultState();
 		
 		return getRoomAt(pos).getBlockAt(pos);
 	}
@@ -627,8 +629,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator
 	{
 		
 		protected static final BlockState WALL =
-				Registry.BLOCK.get(new Identifier("backrooms:wallpaper")).getDefaultState();
-		protected static final BlockState AIR = Registry.BLOCK.get(new Identifier("minecraft:air")).getDefaultState();
+				ModBlocks.WALLPAPER_LINED.getDefaultState();
+		protected static final BlockState AIR = Blocks.AIR.getDefaultState();
 		boolean generated = false;
 		
 		public Room(int x1, int y1, int x2, int y2)

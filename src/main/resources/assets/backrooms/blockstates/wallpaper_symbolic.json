@@ -1,0 +1,336 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_2"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_3"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_4"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_5"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_6"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_special_1"
+      },
+	  {
+        "model": "backrooms:block/wallpaper_symbolic_special_2"
+      }
+    ]
+  }
+}

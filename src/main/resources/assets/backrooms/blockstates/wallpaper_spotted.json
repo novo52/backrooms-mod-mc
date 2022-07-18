@@ -1,0 +1,15 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "backrooms:block/wallpaper_spotted_1"
+      },
+      {
+		"model": "backrooms:block/wallpaper_spotted_2"
+      },
+      {
+		"model": "backrooms:block/wallpaper_spotted_3"
+      }
+    ]
+  }
+}
